@@ -1,4 +1,13 @@
-/*
+/* ~~~~~~~ UltraSonic Distance Sensor Object ~~~~~~~
+
+    Modification of the example program, this one removes any delay() functions
+    and instead uses a state machine with a sequencer to control the timing
+    of input & output events.
+
+    This lets the sensor run around other, time critical software functions.
+
+
+
   Ping))) Sensor
 
   This sketch reads a PING))) ultrasonic rangefinder and returns the distance
@@ -7,6 +16,9 @@
   returning pulse is proportional to the distance of the object from the sensor.
 
 */
+
+
+
 
 // this constant won't change. It's the pin number of the sensor's output:
 #define triggerPin 2
@@ -18,15 +30,14 @@ autoDelay pingControl;    // Used to control the timing of the ping functions
 
 autoDelay sampleDelay;    //Used to delay individual sensor readings
 
-uint32_t sampleDelayMs = 2000;   // Sample once a second
+uint32_t sampleDelayMs = 100;   // Sample twice a second
 
 
 
 
 
 
-uint32_t pulseStart;
-uint32_t pulseFinish;
+
 uint32_t pulseDuration;
 
 bool pulseDetected;
@@ -51,91 +62,100 @@ void setup() {
 
 
 bool triggerState;  // holds state of triggerPin
-bool lastTriggerState;  //bool to hold the last trigger state. overkill but it means the digitalpin can be written to only when there is a state change
+bool lastTriggerState = LOW;  //bool to hold the last trigger state. overkill but it means the digitalpin can be written to only when there is a state change
 
 bool sampleNow;     // bool set by timer to trigger sensor sample
 
-long duration_uS, cm;
+uint32_t cm;
 
 
 uint8_t pingSequencer = 0; //controls sequence of ping pin
 
 
+float filterBias = 0.75;   // Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
+
+int32_t recursiveFilter(int32_t Xn, float w = 0.9);  // Declared here as a bug fix (arduino usually does this itself but sometimes generates compiler errors)
+
+
 void loop() {
 
 
-  // establish variables for duration of the ping, and the distance result
-  // in inches and centimeters:
+  // State 0: - waiting for trigger
+  if (pingSequencer == 0)   {                                         // State 0: Waiting to send ping
+    if (sampleDelay.millisDelay(sampleDelayMs)) {                   // if delay time is up,
+      pingSequencer++;                                            // Trigger Sample Bool
+    }
+  }
 
+  // States 1 to 3: - Send Output Ping
+  sendPing();                                   // Send ping runs every loop, activates timed sequence when is only active when pingSequencer goes to 1.
+
+  // States 4 to 6: - Wait for echo and measure the length of the return pulse
+  timePulse();
+
+  // State 7: - When ping has returned calculate the distance & print value
+  if (pingSequencer == 7) {                                     // When pingSequencer reaches 7, ping has been sent and recieved
+    cm = microsecondsToCentimeters(pulseDuration);         // convert the time into a distance
+    int32_t filteredData;
+    
+    filteredData = recursiveFilter(cm, filterBias);
+    
+    printDistance_cm(cm);                                    // Print the distance to serial monitor
+   printFiltered_data(filteredData);
+    pingSequencer = 0;                                           // distance has been calculated so reset pingSequencer ready for the next trigger
+  }
+}
+
+
+
+
+
+void sendPing() {
 
   // The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
 
-
-  if (sampleDelay.millisDelay(sampleDelayMs)) {                   // if delay time is up,
-    sampleNow = true;                                              // Trigger Sample Bool
-   // Serial.println("Sample Now:");
-  }
-
-  if (sampleNow) {                                             // if sampleNow is true
-
-    if (pingSequencer == 0) {                                         // cycle through ping sequence
-      digitalWrite(triggerPin, LOW);
-
-      if (pingControl.microsDelay(2)) {
-        pingSequencer++;
-      }
-    }
-
-    if (pingSequencer == 1) {
-      digitalWrite(triggerPin, HIGH);
-      if (pingControl.microsDelay(5)) {
-        pingSequencer++;
-      }
-    }
-
-    if (pingSequencer == 2) {
-      digitalWrite(triggerPin, LOW);
-      //  duration_uS = pulseIn(echoPin, HIGH);                 // listen for the return pulse // This takes 29 microseconds per cm, if max distance is 300 cm, then max return time would be 9000uS or 9 milliseconds
-
-      if (pingControl.microsDelay(9000)) {                           // wait for 9mS before resetting variables to start cycle again.
-
-        pingSequencer = 0;
-        sampleNow = false;
-      }
+  if (pingSequencer == 1) {                                         // cycle through ping sequence
+    digitalWrite(triggerPin, LOW);                                  // Send Low pulse
+    if (pingControl.microsDelay(2)) {                              // time a 2 microsecond delay, before advancing the program
+      pingSequencer++;
+      sampleNow = 0;
     }
   }
 
 
-  // Neat solution but it do not works
+  if (pingSequencer == 2) {
+    digitalWrite(triggerPin, HIGH);
 
+    if (pingControl.microsDelay(5)) {
+      pingSequencer++;
+    }
+  }
+
+  if (pingSequencer == 3) {
+    digitalWrite(triggerPin, LOW);
+    pingSequencer++;
+
+  }
+  // Still not a fan of this method, seems to run really slowly
   /*
-    if (triggerState != lastTriggerState){                        // If the state has changed
-    digitalWrite(triggerPin, triggerState);                  // set the trigger pin based on the state set by the sequencer
-    lastTriggerState = triggerState;                               // save the last state of the trigger pin
+    if (triggerState != lastTriggerState) {                       // If the state has changed
+      digitalWrite(triggerPin, triggerState);                  // set the trigger pin based on the state set by the sequencer
+      lastTriggerState = triggerState;                               // save the last state of the trigger pin
     }
   */
-
-  timePulse();
-  duration_uS = pulseDuration;
-
-  if ( pulseComplete) {                            // if returns null it exits? if returns a figure it performs the
-
-    cm = microsecondsToCentimeters(duration_uS);         // convert the time into a distance
-    printDistance_cm(cm);
-    pulseComplete = false;
-  }
-
-
-
-
-
-
 
 }
 
 
-long microsecondsToCentimeters(long microseconds) {
+
+
+
+
+
+
+
+uint32_t microsecondsToCentimeters(uint32_t microseconds) {
   // The speed of sound is 340 m/s or 29 microseconds per centimeter.
   // The ping travels out and back, so to find the distance of the object we
   // take half of the distance travelled.
@@ -143,49 +163,69 @@ long microsecondsToCentimeters(long microseconds) {
 }
 
 
+
+
+
 void printDistance_cm(uint32_t centimeters) {
 
 
   Serial.print(centimeters);
-  Serial.print("cm");
+  Serial.print(" cm   ");
+  Serial.print("");
+
+}
+
+
+void printFiltered_data(int16_t input) {
+
+  Serial.print(input);
+  Serial.print(" cm - Filtered");
   Serial.println();
 
 }
 
 
 
-uint8_t echoSequencer = 0;  // sequencer to control sequence of events for the returning pulse
 
 
 void timePulse() {
 
-  int pulseDetect = digitalRead(echoPin);
 
-  Serial.println(pulseDetect);
+  uint32_t pulseStart;                           // These variables are not required outside of this function so they are both called here
+  uint32_t pulseFinish;
 
-  if (echoSequencer == 0) {                                // if pulse has not yet been detected
 
-    if (pulseDetect == 1) {                                 // & echoPin reads HIGH
-      pulseStart = micros();                              // Record time
-      echoSequencer++;                               // advance sequencer
-
+  if (pingSequencer == 4) {                                   // Sequencer has been advanced to 3 by the sendPing function,
+    if (digitalRead(echoPin)) {                                 // Read the echoPin untill echoPin reads HIGH
+      pulseStart = micros();                              // Record pulse start time
+      pingSequencer++;                               // advance sequencer
     }
   }
 
-  if (echoSequencer == 1) {                                      // if pulse has been detected
-
-    if (pulseDetect == 0) {                                      // if pulseDetect has read low
+  if (pingSequencer == 5) {                                      // if pulse has been detected & Sequencer is advanced to 4
+    if (!digitalRead(echoPin)) {                                      // Read the echoPin untill echoPin reads LOW
       pulseFinish = micros();                                 // record the finish time for the pulse
-      echoSequencer++;
+      pingSequencer++;                                           // advance the pingSequencer
     }
   }
 
-  if  ( echoSequencer == 3) {                                      // if the pulse is complete
-    pulseComplete = true;                                     // set complete flag to false
+  if  ( pingSequencer == 6) {                                      // if the pulse is complete
     pulseDuration = (pulseFinish - pulseStart);                // Calculate the pulse duration
-    Serial.println(pulseDuration);
-    echoSequencer = 0;                                         // reset the sequencer ready to record the next event
-  } else {
-   // pulseDuration = 0;                                         // else return zero
+    pingSequencer++;                                         // advance the pingSequencer
   }
+}
+
+
+
+
+
+
+// Old Depreciated Method
+
+void pulseMeasure() {
+
+
+  //  duration_uS = pulseIn(echoPin, HIGH); // Old Depreciated version                // listen for the return pulse // This takes 29 microseconds per cm, if max distance is 300 cm, then max return time would be 9000uS or 9 milliseconds
+
+
 }
