@@ -33,15 +33,18 @@ autoDelay sampleDelay;    //Used to delay individual sensor readings
 uint32_t sampleDelayMs = 100;   // Sample twice a second
 
 
+#include "dataObject.h"
+
+#define FILTER_BIAS 0.5   // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
+#define FILTER_SERIAL_OUT_TRUE 1
+#define FILTER_SERIAL_OUT_FALSE 0
+
+dataObject dataLib(FILTER_BIAS, FILTER_SERIAL_OUT_FALSE);
 
 
 
 
 
-uint32_t pulseDuration;
-
-bool pulseDetected;
-bool pulseComplete;
 
 
 
@@ -61,20 +64,11 @@ void setup() {
 
 
 
-bool triggerState;  // holds state of triggerPin
-bool lastTriggerState = LOW;  //bool to hold the last trigger state. overkill but it means the digitalpin can be written to only when there is a state change
-
-bool sampleNow;     // bool set by timer to trigger sensor sample
-
-uint32_t cm;
 
 
-uint8_t pingSequencer = 0; //controls sequence of ping pin
 
 
-float filterBias = 0.75;   // Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
 
-int32_t recursiveFilter(int32_t Xn, float w = 0.9);  // Declared here as a bug fix (arduino usually does this itself but sometimes generates compiler errors)
 
 
 void loop() {
@@ -91,14 +85,14 @@ void loop() {
   sendPing();                                   // Send ping runs every loop, activates timed sequence when is only active when pingSequencer goes to 1.
 
   // States 4 to 6: - Wait for echo and measure the length of the return pulse
-  timePulse();
+  timeEcho();
 
   // State 7: - When ping has returned calculate the distance & print value
   if (pingSequencer == 7) {                                     // When pingSequencer reaches 7, ping has been sent and recieved
     cm = microsecondsToCentimeters(pulseDuration);         // convert the time into a distance
     int32_t filteredData;
     
-    filteredData = recursiveFilter(cm, filterBias);
+    filteredData = dataLib.recursiveFilter(cm);
     
     printDistance_cm(cm);                                    // Print the distance to serial monitor
    printFiltered_data(filteredData);
@@ -188,7 +182,7 @@ void printFiltered_data(int16_t input) {
 
 
 
-void timePulse() {
+void timeEcho() {
 
 
   uint32_t pulseStart;                           // These variables are not required outside of this function so they are both called here

@@ -1,24 +1,36 @@
-/* ~~~~~~~~~~~~~ Data Filtering Algorithms ~~~~~~~~~~~~~~~~~~~~~
+/* ~~~~~~~~~~~~~ dataObject.h ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Data Filtering Algorithms
 
-   Library to store various data filtering & Sorting algorithms
+   Library to store various data filtering
+   & sorting algorithms
 
 
 
 */
 
+#include "dataObject.h"
 
 
 
 
-/*  //~~~~~~~~~~~~~~~~~~ RECURSIVE FILTER FUNCTION~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-     oh hell to the fucking yes maths. Fuck yes.
 
-*/
+
+void dataObject::begin(uint32_t baudrate) {
+  if (printSerial) {
+    Serial.begin(baudrate);
+  }
+}
+
+
+
+
+
+//~~~~~~~~~~~~~~~~~~ RECURSIVE FILTER METHOD~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /*
-   The last filter is a recursive filter. A recursive filter is just one that calculates a new, smoothed value (yn) by using the last smoothed value (yn – 1) and a new measurement (xn):
+   The last filter is a recursive filter. A recursive filter is just one that calculates a new, smoothed value (Yn) by using the last smoothed value (Y(n – 1)) and a new measurement (xn):
 
   yn = w × xn + (1 – w) × yn – 1
   The amount of smoothing is controlled by a weighting parameter (w).
@@ -36,15 +48,12 @@
 
 
 
-int32_t Ypre;
-
-bool printSerial = false;
 
 
-int32_t recursiveFilter(int32_t Xn, float w = 0.9) {
+
+int32_t dataObject::recursiveFilter(int32_t Xn) {
 
   int32_t Yn;
-
 
   Yn = (w * Xn) + ((1 - w) * Ypre);
 
@@ -60,9 +69,4 @@ int32_t recursiveFilter(int32_t Xn, float w = 0.9) {
   Ypre = Yn;
 
   return Yn;
-
 }
-
-
-
-//int16_t recursiveFilter(int16_t Xn, int8_t w = 90, int16_t Ypre)
