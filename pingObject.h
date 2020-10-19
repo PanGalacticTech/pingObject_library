@@ -44,8 +44,8 @@ class pingObject {
 
     // Constructor
 
-    pingObject(int16_t triggerInputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true):
-      triggerPin(triggerInputPin),
+    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true):
+      triggerPin(triggerOutputPin),
       echoPin(echoInputPin),
       printSerial(serialMonitor)
     {
@@ -78,7 +78,7 @@ class pingObject {
 
     // Variables
 
-    uint32_t cm;
+    int32_t centimeters;
 
 
 
@@ -88,7 +88,22 @@ class pingObject {
 
     uint8_t pingSequencer = 0;         //controls events sequence
 
+
+
+    int16_t triggerPin;
+
+    int16_t echoInputPin;
+
     bool printSerial;
+
+
+   bool triggerState;
+
+   bool lastTriggerState;
+
+   uint32_t pulseStart;
+   uint32_t pulseFinish;
+
 
 };
 
