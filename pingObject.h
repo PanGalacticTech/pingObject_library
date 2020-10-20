@@ -48,11 +48,12 @@ class pingObject {
 
     // Constructor
 
-    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true, uint32_t sensorSampleDelay = 100, bool dataFilter = true, float filterBalance = 0.9):
+    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true, uint32_t sensorSampleDelay = 100, bool manualTrigger = false, bool dataFilter = true, float filterBalance = 0.9):
       triggerPin(triggerOutputPin),
       echoPin(echoInputPin),
       printSerial(serialMonitor),
       sampleDelayMs(sensorSampleDelay),
+      manualPing(manualTrigger),
       filterData(dataFilter),
       dataLib(filterBalance, FILTER_SERIAL_OUT_FALSE)
     {
@@ -127,6 +128,8 @@ class pingObject {
     bool printSerial;
 
     bool filterData;
+
+    bool manualPing;
 
     uint32_t sampleDelayMs = 100;   // Sample twice a second
 

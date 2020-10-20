@@ -29,8 +29,9 @@
 //autoDelay sampleDelay;    //Used to delay individual sensor readings
 
 
+autoDelay dualSensor;
 
-
+#define DUAL_SENSOR_DELAY 500
 
 
 // All dataObject stuff handled in pingObject.h
@@ -46,16 +47,20 @@
 #include "pingObject.h"
 
 // Options
-#define TRIGGER_OUTPUT_PIN 2
-#define ECHO_RECEIVE_PIN 8
-#define PING_SERIAL_OUTPUT false
-#define SENSOR_SAMPLE_DELAY_MS 100
-#define DATA_FILTERING true
-#define FILTER_BIAS 0.8                       // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
+#define TRIGGER_OUTPUT_PIN_L 2
+#define ECHO_RECEIVE_PIN_L 8
+#define PING_SERIAL_OUTPUT true
+#define SENSOR_SAMPLE_DELAY_MS 200
+#define MANUAL_PING false                       // If MANUAL_PING true, pingLoop waits for trigger, if false runs at delay speed
+#define DATA_FILTERING false
+#define FILTER_BIAS 0.5                       // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
 
-pingObject pingLeft(TRIGGER_OUTPUT_PIN, ECHO_RECEIVE_PIN , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, DATA_FILTERING, FILTER_BIAS);
+pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, MANUAL_PING, DATA_FILTERING, FILTER_BIAS);
 
+#define TRIGGER_OUTPUT_PIN_R 1
+#define ECHO_RECEIVE_PIN_R 0
 
+pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, MANUAL_PING, DATA_FILTERING, FILTER_BIAS);
 
 
 
@@ -64,6 +69,7 @@ void setup() {
   Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required 
   
   pingLeft.begin();     // Sets input & output pins & (starts serial communications (default 115200))(if PING_SERIAL_OUTPUT = true
+// pingRight.begin();
 }
 
 
@@ -74,8 +80,16 @@ void setup() {
 void loop() {
 
   pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
+ // pingRight.pingLoop();
 
- Serial.print(pingLeft.pingDistance());     // Used to return just the distance in centimeters
- //Serial.print(pingLeft.centimeters);
-  Serial.println(" cm");
+
+// Serial.print(pingLeft.pingDistance());     // Used to return just the distance in centimeters
+// Serial.print(pingLeft.centimeters);
+ // Serial.println(" cm left || ");
+
+ // Serial.print(pingRight.centimeters);
+ // Serial.println(" cm right ");
+  
+
+  
 }

@@ -42,6 +42,7 @@ void pingObject::begin(uint32_t baudrate) {
 
 void pingObject::pingLoop() {
 
+
   if (pingSequencer == 0) {                                         // state 0 - Armed Mode: function waits for delay timer to trigger the sequence by
     pingObject::triggerPing(sampleDelayMs);                   //incrementing pingSequencer to 1;
   }
@@ -61,6 +62,7 @@ void pingObject::pingLoop() {
 }
 
 
+
 int32_t pingObject::pingDistance() {
   int32_t d = centimeters;
   return d;
@@ -68,10 +70,12 @@ int32_t pingObject::pingDistance() {
 
 
 void pingObject::triggerPing(uint32_t delayMs) {   // Counts elasped time since last ping recieved // triggers sendPing by advancing pingSequencer to 1.
-  if (sampleDelay.millisDelay(delayMs)) {                   // if delay time is up,
-    pingSequencer++;                                            // Trigger Sample Bool
-  }
-}
+ 
+    if (sampleDelay.millisDelay(delayMs)) {                   // if delay time is up,
+      pingSequencer++;                                            // Trigger Sample Bool
+    }
+  } 
+
 
 
 
