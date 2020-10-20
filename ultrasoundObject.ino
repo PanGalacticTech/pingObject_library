@@ -20,39 +20,40 @@
 
 
 
-// this constant won't change. It's the pin number of the sensor's output:
-#define triggerPin 2
-#define echoPin 8
+
 
 #include <autoDelay.h>
 
-autoDelay pingControl;    // Used to control the timing of the ping functions
+//autoDelay pingControl;    // Used to control the timing of the ping functions
 
-autoDelay sampleDelay;    //Used to delay individual sensor readings
+//autoDelay sampleDelay;    //Used to delay individual sensor readings
 
-uint32_t sampleDelayMs = 100;   // Sample twice a second
 
-#define SENSOR_SAMPLE_DELAY_MS 100
 
-#include "dataObject.h"
 
-#define FILTER_BIAS 0.5   // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
-#define FILTER_SERIAL_OUT_TRUE 1
-#define FILTER_SERIAL_OUT_FALSE 0
 
-dataObject dataLib(FILTER_BIAS, FILTER_SERIAL_OUT_FALSE);
+
+// All dataObject stuff handled in pingObject.h
+//#include "dataObject.h"
+
+//#define FILTER_BIAS 0.5   // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
+//#define FILTER_SERIAL_OUT_TRUE 1
+//#define FILTER_SERIAL_OUT_FALSE 0
+
+//dataObject dataLib(FILTER_BIAS, FILTER_SERIAL_OUT_FALSE);
 
 
 #include "pingObject.h"
 
+// Options
 #define TRIGGER_OUTPUT_PIN 2
 #define ECHO_RECEIVE_PIN 8
-#define PING_SERIAL_OUTPUT_TRUE 1
+#define PING_SERIAL_OUTPUT false
+#define SENSOR_SAMPLE_DELAY_MS 100
+#define DATA_FILTERING true
+#define FILTER_BIAS 0.8                       // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
 
-pingObject pingLeft(TRIGGER_OUTPUT_PIN, ECHO_RECEIVE_PIN , PING_SERIAL_OUTPUT_TRUE);
-
-
-
+pingObject pingLeft(TRIGGER_OUTPUT_PIN, ECHO_RECEIVE_PIN , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, DATA_FILTERING, FILTER_BIAS);
 
 
 
@@ -60,14 +61,10 @@ pingObject pingLeft(TRIGGER_OUTPUT_PIN, ECHO_RECEIVE_PIN , PING_SERIAL_OUTPUT_TR
 
 
 void setup() {
-pingLeft.begin();     // Sets input & output pins & starts serial communications (default 115200) 
-
+  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required 
+  
+  pingLeft.begin();     // Sets input & output pins & (starts serial communications (default 115200))(if PING_SERIAL_OUTPUT = true
 }
-
-
-
-
-
 
 
 
@@ -76,29 +73,9 @@ pingLeft.begin();     // Sets input & output pins & starts serial communications
 
 void loop() {
 
+  pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
 
-
-
-  
-  if (pingSequencer == 0)   {                                         // State 0: Waiting to send ping
-pingLeft.triggerPing(SENSOR_SAMPLE_DELAY_MS);
-  }
-
-  // States 1 to 3: - Send Output Ping
-  sendPing();                                   // Send ping runs every loop, activates timed sequence when is only active when pingSequencer goes to 1.
-
-  // States 4 to 6: - Wait for echo and measure the length of the return pulse
-  timeEcho();
-
-  // State 7: - When ping has returned calculate the distance & print value
-  if (pingSequencer == 7) {                                     // When pingSequencer reaches 7, ping has been sent and recieved
-   
-    cm = microsecondsToCentimeters(pulseDuration);         // convert the time into a distance
-     
-
-    
-    pingLeft.printDistance_cm(cm);                                    // Print the distance to serial monitor
-   pingLeft.printFiltered_data(dataLib.recursiveFilter(cm));
-    pingSequencer = 0;                                           // distance has been calculated so reset pingSequencer ready for the next trigger
-  }
+ Serial.print(pingLeft.pingDistance());     // Used to return just the distance in centimeters
+ //Serial.print(pingLeft.centimeters);
+  Serial.println(" cm");
 }

@@ -32,22 +32,29 @@
 #endif
 
 #include <autoDelay.h>  // Requires Autodelay instance to handle timing functions. Library can be found @: https://github.com/PanGalacticTech/autoDelay_Library
+#include "dataObject.h"   // Requires dataObject instance to handle filtering of sensor readings. Library can be found @ Locally, within this folder.
 
 
+
+#define FILTER_SERIAL_OUT_TRUE 1
+#define FILTER_SERIAL_OUT_FALSE 0
 
 
 class pingObject {
 
   public:
 
-    autoDelay pingControl, sampleDelay;   // First delay object handles the timings of hardware operations. //2nd delay object handles the delay for triggering sensor samples
+
 
     // Constructor
 
-    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true):
+    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true, uint32_t sensorSampleDelay = 100, bool dataFilter = true, float filterBalance = 0.9):
       triggerPin(triggerOutputPin),
       echoPin(echoInputPin),
-      printSerial(serialMonitor)
+      printSerial(serialMonitor),
+      sampleDelayMs(sensorSampleDelay),
+      filterData(dataFilter),
+      dataLib(filterBalance, FILTER_SERIAL_OUT_FALSE)
     {
     }
 
@@ -58,51 +65,83 @@ class pingObject {
 
     //Methods
 
+    void pingLoop();    // Calls all nessisary functions to return centimeters from ultrasound sensor
+
+   int32_t pingDistance();  // Returns centimeters. Requires pingLoop to be called to calculate distance first.
+
+
+    
+    // Methods Used by pingLoop    
+    void triggerPing(uint32_t delayMs = 100);
+
     void sendPing();
 
     void timeEcho();
 
-
-    uint32_t microsecondsToCentimeters(uint32_t microseconds)
-
+    int32_t pingCalc(uint32_t echoDuration);
 
 
-    void printDistance_cm(uint32_t centimeters)
+    // Other Methods (called by methods called by pingLoop())
 
-    void printFiltered_data(int16_t input)
+    uint32_t microsecondsToCentimeters(uint32_t microseconds);
+
+    // Serial Output Methods
+
+    void printDistance_cm(int32_t distance_cm);
+
+    void printFiltered_data(int32_t input);
 
 
     // Depreciated
     void pulseMeasure();
 
 
-    // Variables
+    // Global Variables
 
-    int32_t centimeters;
+    int32_t centimeters;        // This is the important returned value to pass to other functions
 
 
 
   private:
 
-    uint32_t pulseDuration;
+    // Constructors for Other Objects:
+
+    autoDelay pingControl, sampleDelay;   // First delay object handles the timings of hardware operations. //2nd delay object handles the delay for triggering sensor samples
+
+    dataObject dataLib;                  // Data library used for recursive filter function & data smoothing
+
+    // Global Variables
+
+    uint32_t pulseDuration;             // returned as global variable every time new value is calculated from pingEcho
 
     uint8_t pingSequencer = 0;         //controls events sequence
 
+    // Constants
 
+    int16_t triggerPin;              //
 
-    int16_t triggerPin;
+    int16_t echoPin;
 
-    int16_t echoInputPin;
+    // Option Variables (set in constructor)
 
     bool printSerial;
 
+    bool filterData;
 
-   bool triggerState;
+    uint32_t sampleDelayMs = 100;   // Sample twice a second
 
-   bool lastTriggerState;
 
-   uint32_t pulseStart;
-   uint32_t pulseFinish;
+    // Depreciated/unused
+
+    void outputPinControl(bool input = false);
+
+    bool triggerState;
+    bool lastTriggerState;
+
+    //  uint32_t pulseMeasure();
+
+    //  uint32_t pulseStart;
+    //  uint32_t pulseFinish;
 
 
 };
