@@ -48,12 +48,12 @@ class pingObject {
 
     // Constructor
 
-    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true, uint32_t sensorSampleDelay = 100, bool manualTrigger = false, bool dataFilter = true, float filterBalance = 0.9):
+    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true, uint32_t sensorSampleDelay = 100, bool autoTrigger = true, bool dataFilter = true, float filterBalance = 0.9):
       triggerPin(triggerOutputPin),
       echoPin(echoInputPin),
       printSerial(serialMonitor),
       sampleDelayMs(sensorSampleDelay),
-      manualPing(manualTrigger),
+      autoPing(autoTrigger),
       filterData(dataFilter),
       dataLib(filterBalance, FILTER_SERIAL_OUT_FALSE)
     {
@@ -68,12 +68,15 @@ class pingObject {
 
     void pingLoop();    // Calls all nessisary functions to return centimeters from ultrasound sensor
 
-   int32_t pingDistance();  // Returns centimeters. Requires pingLoop to be called to calculate distance first.
+    int32_t pingDistance();  // Returns centimeters. Requires pingLoop to be called to calculate distance first.
 
 
-    
-    // Methods Used by pingLoop    
-    void triggerPing(uint32_t delayMs = 100);
+
+    // Methods Used by pingLoop
+
+    void timeTrigger(uint32_t delayMs = 100);
+
+    void triggerPing();
 
     void sendPing();
 
@@ -81,6 +84,7 @@ class pingObject {
 
     int32_t pingCalc(uint32_t echoDuration);
 
+    void pingComplete(); // Returns True if one ping cycle has been completed when AUTO_TRIGGER is set to false.
 
     // Other Methods (called by methods called by pingLoop())
 
@@ -93,6 +97,8 @@ class pingObject {
     void printFiltered_data(int32_t input);
 
 
+
+
     // Depreciated
     void pulseMeasure();
 
@@ -101,7 +107,13 @@ class pingObject {
 
     int32_t centimeters;        // This is the important returned value to pass to other functions
 
+    uint8_t pingSequencer = 0;         //controls events sequence
 
+
+    uint16_t loopEscape = 0;    // Function to count "stuck loops" & reset program if it stalls waiting for missed echo response
+
+bool completePing;
+    
 
   private:
 
@@ -115,7 +127,7 @@ class pingObject {
 
     uint32_t pulseDuration;             // returned as global variable every time new value is calculated from pingEcho
 
-    uint8_t pingSequencer = 0;         //controls events sequence
+
 
     // Constants
 
@@ -129,9 +141,11 @@ class pingObject {
 
     bool filterData;
 
-    bool manualPing;
+    bool autoPing;
 
-    uint32_t sampleDelayMs = 100;   // Sample twice a second
+    uint32_t sampleDelayMs;   // Sample twice a second
+
+    
 
 
     // Depreciated/unused

@@ -42,11 +42,11 @@ void pingObject::begin(uint32_t baudrate) {
 
 void pingObject::pingLoop() {
 
-
-  if (pingSequencer == 0) {                                         // state 0 - Armed Mode: function waits for delay timer to trigger the sequence by
-    pingObject::triggerPing(sampleDelayMs);                   //incrementing pingSequencer to 1;
+  if (autoPing) {
+    if (pingSequencer == 0) {                                         // state 0 - Armed Mode: function waits for delay timer to trigger the sequence by
+      pingObject::timeTrigger(sampleDelayMs);                   //incrementing pingSequencer to 1;
+    }
   }
-
 
   // pingSequencer 1 - 3;                                           // States 1 to 3 - Ping Output Mode: control hardware output pins to send a pulse HIGH to ultrasound sensor
   pingObject::sendPing();
@@ -69,14 +69,16 @@ int32_t pingObject::pingDistance() {
 }
 
 
-void pingObject::triggerPing(uint32_t delayMs) {   // Counts elasped time since last ping recieved // triggers sendPing by advancing pingSequencer to 1.
- 
-    if (sampleDelay.millisDelay(delayMs)) {                   // if delay time is up,
-      pingSequencer++;                                            // Trigger Sample Bool
-    }
-  } 
+void pingObject::triggerPing() {    // triggers sendPing by advancing pingSequencer to 1.
+  pingSequencer = 1;                                           // Trigger Sample Bool
+}
 
 
+void pingObject::timeTrigger(uint32_t delayMs) {               // Counts elasped time since last ping recieved
+  if (sampleDelay.millisDelay(delayMs)) {                   // if delay time is up,
+    pingObject::triggerPing();
+  }
+}
 
 
 void pingObject::sendPing() {
@@ -106,11 +108,7 @@ void pingObject::sendPing() {
     //   triggerState = LOW;
     pingSequencer++;
   }
-  // Still not a fan of this method, seems to run really slowly
-  /*
-
-    }
-  */
+ 
 
 }
 
@@ -128,6 +126,10 @@ void pingObject::timeEcho() {
     if (digitalRead(echoPin)) {                                 // Read the echoPin untill echoPin reads HIGH
       pulseStart = micros();                              // Record pulse start time
       pingSequencer++;                               // advance sequencer
+      loopEscape = 0;
+    } else {
+      loopEscape++;
+      //  Serial.println(loopEscape);
     }
   }
 
@@ -135,12 +137,21 @@ void pingObject::timeEcho() {
     if (!digitalRead(echoPin)) {                                      // Read the echoPin untill echoPin reads LOW
       pulseFinish = micros();                                 // record the finish time for the pulse
       pingSequencer++;                                           // advance the pingSequencer
+      loopEscape = 0;
+    } else {
+      loopEscape++;
+      //  Serial.println(loopEscape);
     }
   }
 
   if  ( pingSequencer == 6) {                                      // if the pulse is complete
     pulseDuration = (pulseFinish - pulseStart);                // Calculate the pulse duration
     pingSequencer++;                                         // advance the pingSequencer
+  }
+
+  if (loopEscape >= 2000) {                                     // Method for escaping a loop if the echo is missed
+    loopEscape = 0;
+    pingSequencer = 0;
   }
 }
 
@@ -155,7 +166,11 @@ int32_t pingObject::pingCalc(uint32_t echoDuration) {
 
   int32_t cmFiltered = dataLib.recursiveFilter(cm);                                          // variable to hold filtered data value
 
-  pingSequencer = 0;                                           // distance has been calculated so reset pingSequencer ready for the next trigger
+  if (autoPing) {
+    pingSequencer = 0;                                           //if autoPing is set, distance has been calculated so reset pingSequencer ready for the next trigger
+  } else {
+    pingSequencer++;                                             // else, advance pingSequencer to 8
+  }
 
   if (printSerial) {
     pingObject::printDistance_cm(cm);                                    // Print the distance to serial monitor
@@ -172,6 +187,19 @@ int32_t pingObject::pingCalc(uint32_t echoDuration) {
 }
 
 
+
+
+void pingObject::pingComplete() {
+  Serial.println(pingSequencer);
+  if (pingSequencer == 8) {   
+    pingSequencer = 0;
+    completePing = true;
+    Serial.println("pingComplete");
+    // return true;
+  } else {
+  //  return false;
+  }
+}
 
 uint32_t pingObject::microsecondsToCentimeters(uint32_t microseconds) {
   // The speed of sound is 340 m/s or 29 microseconds per centimeter.

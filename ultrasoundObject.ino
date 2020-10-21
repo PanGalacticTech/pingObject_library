@@ -33,6 +33,8 @@ autoDelay dualSensor;
 
 #define DUAL_SENSOR_DELAY 500
 
+autoDelay slowPrinting;
+
 
 // All dataObject stuff handled in pingObject.h
 //#include "dataObject.h"
@@ -49,47 +51,95 @@ autoDelay dualSensor;
 // Options
 #define TRIGGER_OUTPUT_PIN_L 2
 #define ECHO_RECEIVE_PIN_L 8
-#define PING_SERIAL_OUTPUT true
+#define PING_SERIAL_OUTPUT false
 #define SENSOR_SAMPLE_DELAY_MS 200
-#define MANUAL_PING false                       // If MANUAL_PING true, pingLoop waits for trigger, if false runs at delay speed
+#define AUTO_PING false                      // If AUTO_PING true, pingLoop runs at delay speed, else waits for pingObject.pingTrigger();
 #define DATA_FILTERING false
 #define FILTER_BIAS 0.5                       // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
 
-pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, MANUAL_PING, DATA_FILTERING, FILTER_BIAS);
+pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
-#define TRIGGER_OUTPUT_PIN_R 1
-#define ECHO_RECEIVE_PIN_R 0
+#define TRIGGER_OUTPUT_PIN_R 9
+#define ECHO_RECEIVE_PIN_R 10
 
-pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, MANUAL_PING, DATA_FILTERING, FILTER_BIAS);
+pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
 
 
 
 void setup() {
-  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required 
-  
+  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required
+
   pingLeft.begin();     // Sets input & output pins & (starts serial communications (default 115200))(if PING_SERIAL_OUTPUT = true
-// pingRight.begin();
+  pingRight.begin();
 }
 
 
-
-
+uint8_t sensorSelect = 0;  //
 
 
 void loop() {
 
-  pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
- // pingRight.pingLoop();
 
 
-// Serial.print(pingLeft.pingDistance());     // Used to return just the distance in centimeters
-// Serial.print(pingLeft.centimeters);
- // Serial.println(" cm left || ");
 
- // Serial.print(pingRight.centimeters);
- // Serial.println(" cm right ");
+
+  if (sensorSelect == 0) {
+    pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
+  } else if (sensorSelect == 1) {
+    pingRight.pingLoop();
+  }
+
+  if (slowPrinting.millisDelay(1000)) {
+
+    sensorSelect++;
+    if (sensorSelect == 2) {
+      sensorSelect = 0;
+    }
+    if (sensorSelect == 0) {
+      pingLeft.triggerPing();
+      Serial.print("Left Trigger Ping: ");
+      Serial.println(pingLeft.pingSequencer);
+    } else if (sensorSelect == 1) {
+      pingRight.triggerPing();
+      Serial.print("Right Trigger Ping: ");
+      Serial.println(pingRight.pingSequencer);
+    }
+
+  }
+
+
+
+
+
+  // Serial.println(pingLeft.pingSequencer);
+
+  // pingLeft.pingComplete();
+  // Serial.print(pingLeft.pingDistance());     // Used to return just the distance in centimeters
+
+pingLeft.pingComplete();  // Checks to see if ping has been completed
+
+  if (pingLeft.completePing) {
+    Serial.print(pingLeft.centimeters);
+    Serial.print(" cm left || pingSequencer:  ");
+    //Serial.print(pingRight.centimeters);
+    // Serial.println(" cm right ");
+    Serial.print(" || loopEscape: ");
+    Serial.print(pingLeft.loopEscape);
+    Serial.println(" ");
+    // pingLeft.completePing = false;
+  } 
+
   
+  if (pingRight.completePing) {
+    Serial.print(pingRight.centimeters);
+    Serial.print(" cm Right || pingSequencer:  ");
+
+    Serial.print(" || loopEscape: ");
+    Serial.print(pingRight.loopEscape);
+    Serial.println(" ");
+    // pingLeft.completePing = false;
+  } 
 
   
 }
