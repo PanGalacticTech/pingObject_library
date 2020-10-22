@@ -84,7 +84,7 @@ class pingObject {
 
     int32_t pingCalc(uint32_t echoDuration);
 
-    void pingComplete(); // Returns True if one ping cycle has been completed when AUTO_TRIGGER is set to false.
+    bool pingComplete(); // Returns True if one ping cycle has been completed when AUTO_TRIGGER is set to false.
 
     // Other Methods (called by methods called by pingLoop())
 
@@ -112,8 +112,8 @@ class pingObject {
 
     uint16_t loopEscape = 0;    // Function to count "stuck loops" & reset program if it stalls waiting for missed echo response
 
-bool completePing;
-    
+    bool completePing;
+
 
   private:
 
@@ -145,7 +145,7 @@ bool completePing;
 
     uint32_t sampleDelayMs;   // Sample twice a second
 
-    
+
 
 
     // Depreciated/unused

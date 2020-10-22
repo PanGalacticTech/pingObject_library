@@ -29,6 +29,7 @@
 void pingObject::begin(uint32_t baudrate) {
   if (printSerial) {
     Serial.begin(baudrate);
+    Serial.println("pingObject Deployed");
   }
   pinMode(triggerPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -189,15 +190,15 @@ int32_t pingObject::pingCalc(uint32_t echoDuration) {
 
 
 
-void pingObject::pingComplete() {
-  Serial.println(pingSequencer);
+bool pingObject::pingComplete() {
+ // Serial.println(pingSequencer);
   if (pingSequencer == 8) {   
     pingSequencer = 0;
     completePing = true;
     Serial.println("pingComplete");
-    // return true;
+    return true;
   } else {
-  //  return false;
+   return false;
   }
 }
 

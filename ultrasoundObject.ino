@@ -53,11 +53,11 @@ autoDelay slowPrinting;
 #define ECHO_RECEIVE_PIN_L 8
 #define PING_SERIAL_OUTPUT false
 #define SENSOR_SAMPLE_DELAY_MS 200
-#define AUTO_PING false                      // If AUTO_PING true, pingLoop runs at delay speed, else waits for pingObject.pingTrigger();
+#define AUTO_PING false                      // If AUTO_PING true, pingLoop runs at delay speed, else waits for pingObject.triggerPing();
 #define DATA_FILTERING false
 #define FILTER_BIAS 0.5                       // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
 
-pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
+pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L, PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
 #define TRIGGER_OUTPUT_PIN_R 9
 #define ECHO_RECEIVE_PIN_R 10
@@ -77,69 +77,80 @@ void setup() {
 
 uint8_t sensorSelect = 0;  //
 
+uint32_t defenseCount = 0;
+
+uint8_t previousMode;
 
 void loop() {
 
 
-
-
-
   if (sensorSelect == 0) {
     pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
+    defenseCount++;
   } else if (sensorSelect == 1) {
-    pingRight.pingLoop();
+  //  pingRight.pingLoop();
+    defenseCount++;
   }
 
-  if (slowPrinting.millisDelay(1000)) {
 
-    sensorSelect++;
-    if (sensorSelect == 2) {
+  if (slowPrinting.millisDelay(1000)) {            // State Machine
+
+    if (sensorSelect == 0) {
+      //   sensorSelect = 1;                               // if just one sensor is active put this state machine mode change here
+      pingLeft.triggerPing();
+      Serial.println("Left Trigger Ping: ");
+      Serial.println("");
+    } else if (sensorSelect == 1) {
+      //  sensorSelect = 0;
+   //   pingRight.triggerPing();
+      Serial.println("Right Trigger Ping: ");
+      Serial.println("");
+    }
+
+  }
+
+
+
+
+
+
+
+  if (pingLeft.pingComplete()) {
+    Serial.print(pingLeft.centimeters);
+    Serial.print(" cm left ||  ");
+    Serial.println(" ");
+    Serial.println("");
+    sensorSelect = 1;                               // if both sensors are active, change mode here, as then the mode waits for the other sensor to report back before moving to the next one
+  }                                                  // This then needs some defensive code to switch incase the echo is missed so it doesnt hang forever.
+
+/*
+  if (pingRight.pingComplete()) {
+    Serial.print(pingRight.centimeters);
+    Serial.print(" cm Right ||  ");
+    Serial.println(" ");
+    Serial.println(" ");
+    sensorSelect = 0;    //
+  }
+*/
+
+  // Defensive code        N.B. This is a really lazy way of doing this but who cares it works ish. // A better way would be to reset the counter every time mode changes.
+  // This would require another variable previousMode to compare with sensorSelect.
+
+  if (defenseCount >= 100000) {
+    Serial.println("defensive mode switch");
+    defenseCount = 0;
+    if (sensorSelect == 0) {
+      sensorSelect = 1;
+    } else {
       sensorSelect = 0;
     }
-    if (sensorSelect == 0) {
-      pingLeft.triggerPing();
-      Serial.print("Left Trigger Ping: ");
-      Serial.println(pingLeft.pingSequencer);
-    } else if (sensorSelect == 1) {
-      pingRight.triggerPing();
-      Serial.print("Right Trigger Ping: ");
-      Serial.println(pingRight.pingSequencer);
-    }
-
   }
 
+  if (previousMode != sensorSelect) {
+    defenseCount = 0;
+    previousMode = sensorSelect;
+  }
 
+// NOTE: DO TOMORROW INSTEAD >>> IF THEY ARE EQUAL, START TIMER> IF TIMER UP CHANGE MODE> MUCH BETTER!!!?!?!
 
-
-
-  // Serial.println(pingLeft.pingSequencer);
-
-  // pingLeft.pingComplete();
-  // Serial.print(pingLeft.pingDistance());     // Used to return just the distance in centimeters
-
-pingLeft.pingComplete();  // Checks to see if ping has been completed
-
-  if (pingLeft.completePing) {
-    Serial.print(pingLeft.centimeters);
-    Serial.print(" cm left || pingSequencer:  ");
-    //Serial.print(pingRight.centimeters);
-    // Serial.println(" cm right ");
-    Serial.print(" || loopEscape: ");
-    Serial.print(pingLeft.loopEscape);
-    Serial.println(" ");
-    // pingLeft.completePing = false;
-  } 
-
-  
-  if (pingRight.completePing) {
-    Serial.print(pingRight.centimeters);
-    Serial.print(" cm Right || pingSequencer:  ");
-
-    Serial.print(" || loopEscape: ");
-    Serial.print(pingRight.loopEscape);
-    Serial.println(" ");
-    // pingLeft.completePing = false;
-  } 
-
-  
 }
