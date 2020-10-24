@@ -125,7 +125,7 @@ class pingObject {
 
     // Global Variables
 
-    uint32_t pulseDuration;             // returned as global variable every time new value is calculated from pingEcho
+    int32_t pulseDuration;             // returned as global variable every time new value is calculated from pingEcho
 
 
 

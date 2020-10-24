@@ -24,17 +24,12 @@
 
 #include <autoDelay.h>
 
-//autoDelay pingControl;    // Used to control the timing of the ping functions
-
-//autoDelay sampleDelay;    //Used to delay individual sensor readings
 
 
-autoDelay dualSensor;
 
-#define DUAL_SENSOR_DELAY 500
+autoDelay pingTimer;
 
-autoDelay slowPrinting;
-
+#define PING_TIMER_MS 1000                    // Controls delay between sensorPings
 
 // All dataObject stuff handled in pingObject.h
 //#include "dataObject.h"
@@ -70,84 +65,106 @@ pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTP
 void setup() {
   Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required
 
-  pingLeft.begin();     // Sets input & output pins & (starts serial communications (default 115200))(if PING_SERIAL_OUTPUT = true
+  pingLeft.begin();     // Sets input & output pins & (starts serial communications (default 115200))(if PING_SERIAL_OUTPUT == true)
   pingRight.begin();
 }
 
 
 uint8_t sensorSelect = 0;  //
 
+
+// defensive variables not currently in use
 uint32_t defenseCount = 0;
 
 uint8_t previousMode;
+
+
+
+
 
 void loop() {
 
 
   if (sensorSelect == 0) {
     pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
-    Serial.println("CURRENTLY DOING PING.LEFT >>>");
+
 
   } else if (sensorSelect == 1) {
-    pingRight.pingLoop();
-    Serial.println("<<< currently doing pingRight. ");
-
+      pingRight.pingLoop();
+   // sensorSelect = 0;    // Put this line here if not using the right sensor, else program will hang here. Comment line out if using right sensor
   }
 
 
-  if (slowPrinting.millisDelay(1000)) {            // State Machine
+
+  if (pingTimer.millisDelay(PING_TIMER_MS)) {            // Timer to Trigger the pingSequence
 
     if (sensorSelect == 0) {
-      //   sensorSelect = 1;                               // if just one sensor is active put this state machine mode change here NO BAD NAH BADBOI
       pingLeft.triggerPing();
       Serial.println("Left Trigger Ping: ");
-      Serial.println(".... >>>>");
+      Serial.println("|.... >>>>");
     } else if (sensorSelect == 1) {
-      //   sensorSelect = 0;
-      pingRight.triggerPing();
+        pingRight.triggerPing();
       Serial.println("Right Trigger Ping: ");
-      Serial.println(".... >>>>");
-      // Serial.println("");
+      Serial.println("<<<< .....||");
     }
 
   }
 
 
 
+  // if PING_SERIAL_OUTPUT is false, the result from pingLoop must be extracted when the echo has been detected and the distance calculated.
+  // Not required if PING_SERIAL_OUTPUT is true.
 
 
-
-
-  if (pingLeft.pingComplete()) {
+  if (pingLeft.pingComplete()) {                      // function returns true if ping has been detected
     Serial.print(pingLeft.centimeters);
     Serial.print(" cm left ||  ");
     Serial.println(" ");
     Serial.println("");
-    sensorSelect = 1;                               // if both sensors are active, change mode here, as then the mode waits for the other sensor to report back before moving to the next one
+    sensorSelect = 1;
   }                                                  // This then needs some defensive code to switch incase the echo is missed so it doesnt hang forever.
 
 
-  if (pingRight.pingComplete()) {
-    Serial.print(pingRight.centimeters);
-    Serial.print(" cm Right ||  ");
-    Serial.println(" ");
-    Serial.println(" ");
-    sensorSelect = 0;    //
-  }
+  //if not using right sensor, comment out entire if statement
+
+ 
+    if (pingRight.pingComplete()) {
+      Serial.print(pingRight.centimeters);
+      Serial.print(" cm Right ||  ");
+      Serial.println(" ");
+      Serial.println(" ");
+      sensorSelect = 0;    //
+    }
+ 
+
+
+}
+
+//# ~~ End of Main Loop ~~ #
 
 
 
 
+
+
+
+// Muted Defensive Code. Needs work
+
+
+//vvv ~~ None of this required at the moment ~~ vvv
+
+
+/*
   if (previousMode == sensorSelect) {              // Start counting when previousMode is equal to the current mode
     defenseCount++;
-    Serial.println(defenseCount);
+  //  Serial.println(defenseCount);
   } else {                                       // if they are different
     previousMode = sensorSelect;                  // Save the current mode
     defenseCount = 0;                             // Reset the count
-    Serial.println(defenseCount);
+   // Serial.println(defenseCount);
   }
 
-
+  /*
   if (defenseCount >= 1000) {                  // If the count reaches 1000, assumed that loops has become stuck
     Serial.println("defensive mode switch");
     defenseCount = 0;                                // Reset the count
@@ -157,9 +174,7 @@ void loop() {
       sensorSelect = 0;
     }
   }
+*/
 
 
-
-  // NOTE: DO TOMORROW INSTEAD >>> IF THEY ARE EQUAL, START TIMER> IF TIMER UP CHANGE MODE> MUCH BETTER!!!?!?!
-
-}
+// NOTE: DO TOMORROW INSTEAD >>> IF THEY ARE EQUAL, START TIMER> IF TIMER UP CHANGE MODE> MUCH BETTER!!!?!?!

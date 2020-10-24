@@ -126,6 +126,8 @@ void pingObject::timeEcho() {
   if (pingSequencer == 4) {                                   // Sequencer has been advanced to 3 by the sendPing function,
     if (digitalRead(echoPin)) {                                 // Read the echoPin untill echoPin reads HIGH
       pulseStart = micros();                              // Record pulse start time
+      Serial.print("pulseStart: ");
+      Serial.print(pulseStart);
       pingSequencer = 5;                               // advance sequencer
       loopEscape = 0;
     } else {
@@ -137,7 +139,9 @@ void pingObject::timeEcho() {
   if (pingSequencer == 5) {                                      // if pulse has been detected & Sequencer is advanced to 4
     if (!digitalRead(echoPin)) {                                      // Read the echoPin untill echoPin reads LOW
       pulseFinish = micros();                                 // record the finish time for the pulse
-      pingSequencer++;                                           // advance the pingSequencer
+        Serial.print(" || pulseFinish: ");
+      Serial.print(pulseFinish);
+      pingSequencer = 6;                                           // advance the pingSequencer
       loopEscape = 0;
     } else {
       loopEscape++;
@@ -146,8 +150,10 @@ void pingObject::timeEcho() {
   }
 
   if  ( pingSequencer == 6) {                                      // if the pulse is complete
-    pulseDuration = (pulseFinish - pulseStart);                // Calculate the pulse duration
-    pingSequencer++;                                         // advance the pingSequencer
+    pulseDuration = (pulseFinish - pulseStart);                // Calculate the pulse duration   // This calc is not working when two instances are invoked.
+    Serial.print(" || pulseDuration: ");
+    Serial.println(pulseDuration);
+    pingSequencer = 7;                                         // advance the pingSequencer
   }
 
   if (loopEscape >= 2000) {                                     // Method for escaping a loop if the echo is missed
@@ -170,7 +176,7 @@ int32_t pingObject::pingCalc(uint32_t echoDuration) {
   if (autoPing) {
     pingSequencer = 0;                                           //if autoPing is set, distance has been calculated so reset pingSequencer ready for the next trigger
   } else {
-    pingSequencer++;                                             // else, advance pingSequencer to 8
+    pingSequencer = 8;                                             // else, advance pingSequencer to 8
   }
 
   if (printSerial) {
@@ -194,7 +200,7 @@ bool pingObject::pingComplete() {
  // Serial.println(pingSequencer);
   if (pingSequencer == 8) {   
     pingSequencer = 0;
-    completePing = true;
+  //  completePing = true;                                // << depreciated
     Serial.println("              <<<<....|");
     Serial.println("pingComplete");
     return true;
