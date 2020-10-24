@@ -91,7 +91,7 @@ void pingObject::sendPing() {
     digitalWrite(triggerPin, LOW);                                  // Send Low pulse
     //  triggerState = LOW;
     if (pingControl.microsDelay(2)) {                              // time a 2 microsecond delay, before advancing the program
-      pingSequencer++;
+      pingSequencer = 2;
     }
   }
 
@@ -100,14 +100,14 @@ void pingObject::sendPing() {
     digitalWrite(triggerPin, HIGH);
     //  triggerState = HIGH;
     if (pingControl.microsDelay(5)) {
-      pingSequencer++;
+      pingSequencer = 3;
     }
   }
 
   if (pingSequencer == 3) {
     digitalWrite(triggerPin, LOW);
     //   triggerState = LOW;
-    pingSequencer++;
+    pingSequencer = 4;
   }
  
 
@@ -126,7 +126,7 @@ void pingObject::timeEcho() {
   if (pingSequencer == 4) {                                   // Sequencer has been advanced to 3 by the sendPing function,
     if (digitalRead(echoPin)) {                                 // Read the echoPin untill echoPin reads HIGH
       pulseStart = micros();                              // Record pulse start time
-      pingSequencer++;                               // advance sequencer
+      pingSequencer = 5;                               // advance sequencer
       loopEscape = 0;
     } else {
       loopEscape++;
@@ -195,6 +195,7 @@ bool pingObject::pingComplete() {
   if (pingSequencer == 8) {   
     pingSequencer = 0;
     completePing = true;
+    Serial.println("              <<<<....|");
     Serial.println("pingComplete");
     return true;
   } else {

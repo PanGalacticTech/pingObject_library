@@ -86,25 +86,28 @@ void loop() {
 
   if (sensorSelect == 0) {
     pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
-    defenseCount++;
+    Serial.println("CURRENTLY DOING PING.LEFT >>>");
+
   } else if (sensorSelect == 1) {
-  //  pingRight.pingLoop();
-    defenseCount++;
+    pingRight.pingLoop();
+    Serial.println("<<< currently doing pingRight. ");
+
   }
 
 
   if (slowPrinting.millisDelay(1000)) {            // State Machine
 
     if (sensorSelect == 0) {
-      //   sensorSelect = 1;                               // if just one sensor is active put this state machine mode change here
+      //   sensorSelect = 1;                               // if just one sensor is active put this state machine mode change here NO BAD NAH BADBOI
       pingLeft.triggerPing();
       Serial.println("Left Trigger Ping: ");
-      Serial.println("");
+      Serial.println(".... >>>>");
     } else if (sensorSelect == 1) {
-      //  sensorSelect = 0;
-   //   pingRight.triggerPing();
+      //   sensorSelect = 0;
+      pingRight.triggerPing();
       Serial.println("Right Trigger Ping: ");
-      Serial.println("");
+      Serial.println(".... >>>>");
+      // Serial.println("");
     }
 
   }
@@ -123,7 +126,7 @@ void loop() {
     sensorSelect = 1;                               // if both sensors are active, change mode here, as then the mode waits for the other sensor to report back before moving to the next one
   }                                                  // This then needs some defensive code to switch incase the echo is missed so it doesnt hang forever.
 
-/*
+
   if (pingRight.pingComplete()) {
     Serial.print(pingRight.centimeters);
     Serial.print(" cm Right ||  ");
@@ -131,26 +134,32 @@ void loop() {
     Serial.println(" ");
     sensorSelect = 0;    //
   }
-*/
 
-  // Defensive code        N.B. This is a really lazy way of doing this but who cares it works ish. // A better way would be to reset the counter every time mode changes.
-  // This would require another variable previousMode to compare with sensorSelect.
 
-  if (defenseCount >= 100000) {
+
+
+  if (previousMode == sensorSelect) {              // Start counting when previousMode is equal to the current mode
+    defenseCount++;
+    Serial.println(defenseCount);
+  } else {                                       // if they are different
+    previousMode = sensorSelect;                  // Save the current mode
+    defenseCount = 0;                             // Reset the count
+    Serial.println(defenseCount);
+  }
+
+
+  if (defenseCount >= 1000) {                  // If the count reaches 1000, assumed that loops has become stuck
     Serial.println("defensive mode switch");
-    defenseCount = 0;
-    if (sensorSelect == 0) {
+    defenseCount = 0;                                // Reset the count
+    if (sensorSelect == 0) {                             // Change the mode which resets the pingSequencer << NO WAIT IT DOES NOT DOES IT?!?!?
       sensorSelect = 1;
     } else {
       sensorSelect = 0;
     }
   }
 
-  if (previousMode != sensorSelect) {
-    defenseCount = 0;
-    previousMode = sensorSelect;
-  }
 
-// NOTE: DO TOMORROW INSTEAD >>> IF THEY ARE EQUAL, START TIMER> IF TIMER UP CHANGE MODE> MUCH BETTER!!!?!?!
+
+  // NOTE: DO TOMORROW INSTEAD >>> IF THEY ARE EQUAL, START TIMER> IF TIMER UP CHANGE MODE> MUCH BETTER!!!?!?!
 
 }
