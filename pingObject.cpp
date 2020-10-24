@@ -109,7 +109,7 @@ void pingObject::sendPing() {
     //   triggerState = LOW;
     pingSequencer = 4;
   }
- 
+
 
 }
 
@@ -119,15 +119,11 @@ void pingObject::sendPing() {
 void pingObject::timeEcho() {
 
 
-  uint32_t pulseStart;                           // These variables are not required outside of this function so they are both called here
-  uint32_t pulseFinish;
-
-
   if (pingSequencer == 4) {                                   // Sequencer has been advanced to 3 by the sendPing function,
     if (digitalRead(echoPin)) {                                 // Read the echoPin untill echoPin reads HIGH
       pulseStart = micros();                              // Record pulse start time
-      Serial.print("pulseStart: ");
-      Serial.print(pulseStart);
+      //   Serial.print("pulseStart: ");
+      //    Serial.print(pulseStart);
       pingSequencer = 5;                               // advance sequencer
       loopEscape = 0;
     } else {
@@ -139,8 +135,8 @@ void pingObject::timeEcho() {
   if (pingSequencer == 5) {                                      // if pulse has been detected & Sequencer is advanced to 4
     if (!digitalRead(echoPin)) {                                      // Read the echoPin untill echoPin reads LOW
       pulseFinish = micros();                                 // record the finish time for the pulse
-        Serial.print(" || pulseFinish: ");
-      Serial.print(pulseFinish);
+      //      Serial.print(" || pulseFinish: ");
+      //    Serial.print(pulseFinish);
       pingSequencer = 6;                                           // advance the pingSequencer
       loopEscape = 0;
     } else {
@@ -150,9 +146,13 @@ void pingObject::timeEcho() {
   }
 
   if  ( pingSequencer == 6) {                                      // if the pulse is complete
+
     pulseDuration = (pulseFinish - pulseStart);                // Calculate the pulse duration   // This calc is not working when two instances are invoked.
-    Serial.print(" || pulseDuration: ");
-    Serial.println(pulseDuration);
+    // Put other Serial Prints Here to test.
+
+    debugOutput(SERIAL_DEBUG_OUTPUT);                               // verbose debug output. (default off)
+
+
     pingSequencer = 7;                                         // advance the pingSequencer
   }
 
@@ -197,15 +197,16 @@ int32_t pingObject::pingCalc(uint32_t echoDuration) {
 
 
 bool pingObject::pingComplete() {
- // Serial.println(pingSequencer);
-  if (pingSequencer == 8) {   
+  // Serial.println(pingSequencer);
+  if (pingSequencer == 8) {
     pingSequencer = 0;
-  //  completePing = true;                                // << depreciated
-    Serial.println("              <<<<....|");
-    Serial.println("pingComplete");
+    if (SERIAL_DEBUG_OUTPUT) {
+      Serial.println("              <<<<....|");
+      Serial.println("pingComplete");
+    }
     return true;
   } else {
-   return false;
+    return false;
   }
 }
 
@@ -258,6 +259,26 @@ void pingObject::outputPinControl(bool input) {
 
   }
 }
+
+
+void pingObject::debugOutput(bool active) {
+
+
+  if (active) {
+    Serial.print("pulseStart: ");
+    Serial.print(pulseStart);
+
+    Serial.print(" || pulseFinish: ");
+    Serial.print(pulseFinish);
+
+    Serial.print(" || pulseDuration: ");
+    Serial.println(pulseDuration);
+  }
+
+
+}
+
+
 
 
 // Old Depreciated Method

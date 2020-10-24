@@ -39,6 +39,7 @@
 #define FILTER_SERIAL_OUT_TRUE 1
 #define FILTER_SERIAL_OUT_FALSE 0
 
+#define SERIAL_DEBUG_OUTPUT false // if true sets extra debug verbose output
 
 class pingObject {
 
@@ -96,7 +97,7 @@ class pingObject {
 
     void printFiltered_data(int32_t input);
 
-
+    void debugOutput(bool active = false);
 
 
     // Depreciated
@@ -115,6 +116,7 @@ class pingObject {
     bool completePing;
 
 
+
   private:
 
     // Constructors for Other Objects:
@@ -125,8 +127,9 @@ class pingObject {
 
     // Global Variables
 
-    int32_t pulseDuration;             // returned as global variable every time new value is calculated from pingEcho
-
+    uint32_t pulseDuration;             // returned as global variable every time new value is calculated from pingEcho
+    uint32_t pulseStart;                           //
+    uint32_t pulseFinish;
 
 
     // Constants
@@ -136,6 +139,8 @@ class pingObject {
     int16_t echoPin;
 
     // Option Variables (set in constructor)
+
+
 
     bool printSerial;
 

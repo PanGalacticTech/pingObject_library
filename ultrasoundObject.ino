@@ -44,8 +44,8 @@ autoDelay pingTimer;
 #include "pingObject.h"
 
 // Options
-#define TRIGGER_OUTPUT_PIN_L 2
-#define ECHO_RECEIVE_PIN_L 8
+#define TRIGGER_OUTPUT_PIN_L A0
+#define ECHO_RECEIVE_PIN_L A1
 #define PING_SERIAL_OUTPUT false
 #define SENSOR_SAMPLE_DELAY_MS 200
 #define AUTO_PING false                      // If AUTO_PING true, pingLoop runs at delay speed, else waits for pingObject.triggerPing();
@@ -54,8 +54,8 @@ autoDelay pingTimer;
 
 pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L, PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
-#define TRIGGER_OUTPUT_PIN_R 9
-#define ECHO_RECEIVE_PIN_R 10
+#define TRIGGER_OUTPUT_PIN_R A2
+#define ECHO_RECEIVE_PIN_R A3
 
 pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
@@ -90,8 +90,8 @@ void loop() {
 
 
   } else if (sensorSelect == 1) {
-      pingRight.pingLoop();
-   // sensorSelect = 0;    // Put this line here if not using the right sensor, else program will hang here. Comment line out if using right sensor
+    pingRight.pingLoop();
+    // sensorSelect = 0;    // Put this line here if not using the right sensor, else program will hang here. Comment line out if using right sensor
   }
 
 
@@ -100,12 +100,16 @@ void loop() {
 
     if (sensorSelect == 0) {
       pingLeft.triggerPing();
-      Serial.println("Left Trigger Ping: ");
-      Serial.println("|.... >>>>");
+      if (SERIAL_DEBUG_OUTPUT) {
+        Serial.println("Left Trigger Ping: ");
+        Serial.println("|.... >>>>");
+      }
     } else if (sensorSelect == 1) {
-        pingRight.triggerPing();
-      Serial.println("Right Trigger Ping: ");
-      Serial.println("<<<< .....||");
+      pingRight.triggerPing();
+      if (SERIAL_DEBUG_OUTPUT) {
+        Serial.println("Right Trigger Ping: ");
+        Serial.println("<<<< .....||");
+      }
     }
 
   }
@@ -127,15 +131,15 @@ void loop() {
 
   //if not using right sensor, comment out entire if statement
 
- 
-    if (pingRight.pingComplete()) {
-      Serial.print(pingRight.centimeters);
-      Serial.print(" cm Right ||  ");
-      Serial.println(" ");
-      Serial.println(" ");
-      sensorSelect = 0;    //
-    }
- 
+
+  if (pingRight.pingComplete()) {
+    Serial.print(pingRight.centimeters);
+    Serial.print(" cm Right ||  ");
+    Serial.println(" ");
+    Serial.println(" ");
+    sensorSelect = 0;    //
+  }
+
 
 
 }
