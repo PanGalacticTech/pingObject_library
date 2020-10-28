@@ -196,8 +196,10 @@ int32_t pingObject::pingCalc(uint32_t echoDuration) {
 
 
 
-bool pingObject::pingComplete() {
-  // Serial.println(pingSequencer);
+bool pingObject::pingComplete() {                                         // if PING_SERIAL_OUTPUT is false, the result from pingLoop must be extracted when the echo has been detected and the distance calculated.
+  // Not required if PING_SERIAL_OUTPUT is true.
+
+
   if (pingSequencer == 8) {
     pingSequencer = 0;
     if (SERIAL_DEBUG_OUTPUT) {

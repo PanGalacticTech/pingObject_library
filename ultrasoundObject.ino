@@ -22,14 +22,13 @@
 
 
 
-#include <autoDelay.h>
 
 
 
 
-autoDelay pingTimer;
 
-#define PING_TIMER_MS 1000                    // Controls delay between sensorPings
+
+
 
 // All dataObject stuff handled in pingObject.h
 //#include "dataObject.h"
@@ -41,7 +40,9 @@ autoDelay pingTimer;
 //dataObject dataLib(FILTER_BIAS, FILTER_SERIAL_OUT_FALSE);
 
 
-#include "pingObject.h"
+//#include "pingObject.h"
+
+#include "pingNavigation.h"
 
 // Options
 #define TRIGGER_OUTPUT_PIN_L A0
@@ -52,25 +53,28 @@ autoDelay pingTimer;
 #define DATA_FILTERING false
 #define FILTER_BIAS 0.5                       // 0 to 1: Higher numbers = faster response less filtering // Lower numbers = Slower response, more filtering
 
-pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L, PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
+//pingObject pingLeft(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L, PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
 #define TRIGGER_OUTPUT_PIN_R A2
 #define ECHO_RECEIVE_PIN_R A3
 
-pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
+//pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
+#define MONITOR_OUTPUT true
+#define PING_TIMER_MS 1000                    // Controls delay between sensorPings
 
+pingNavigation robotNav(TRIGGER_OUTPUT_PIN_L, ECHO_REVEIVE_PIN_L, TRIGGER_OUTPUT_PING_R, PING_TIMER_MS, ECHO_RECEIVE_PIN_R, DATA_FILTERING, FILTER_BIAS, MONITOR_OUTPUT);
 
 
 void setup() {
-  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required
+//  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required
 
-  pingLeft.begin();     // Sets input & output pins & (starts serial communications (default 115200))(if PING_SERIAL_OUTPUT == true)
-  pingRight.begin();
+robotNav.navSetup();
+
 }
 
 
-uint8_t sensorSelect = 0;  //
+
 
 
 // defensive variables not currently in use
@@ -85,60 +89,9 @@ uint8_t previousMode;
 void loop() {
 
 
-  if (sensorSelect == 0) {
-    pingLeft.pingLoop();                       // pingLoop must be called to generate Distance in centimeters
+robotNav.masterLoop()
 
 
-  } else if (sensorSelect == 1) {
-    pingRight.pingLoop();
-    // sensorSelect = 0;    // Put this line here if not using the right sensor, else program will hang here. Comment line out if using right sensor
-  }
-
-
-
-  if (pingTimer.millisDelay(PING_TIMER_MS)) {            // Timer to Trigger the pingSequence
-
-    if (sensorSelect == 0) {
-      pingLeft.triggerPing();
-      if (SERIAL_DEBUG_OUTPUT) {
-        Serial.println("Left Trigger Ping: ");
-        Serial.println("|.... >>>>");
-      }
-    } else if (sensorSelect == 1) {
-      pingRight.triggerPing();
-      if (SERIAL_DEBUG_OUTPUT) {
-        Serial.println("Right Trigger Ping: ");
-        Serial.println("<<<< .....||");
-      }
-    }
-
-  }
-
-
-
-  // if PING_SERIAL_OUTPUT is false, the result from pingLoop must be extracted when the echo has been detected and the distance calculated.
-  // Not required if PING_SERIAL_OUTPUT is true.
-
-
-  if (pingLeft.pingComplete()) {                      // function returns true if ping has been detected
-    Serial.print(pingLeft.centimeters);
-    Serial.print(" cm left ||  ");
-    Serial.println(" ");
-    Serial.println("");
-    sensorSelect = 1;
-  }                                                  // This then needs some defensive code to switch incase the echo is missed so it doesnt hang forever.
-
-
-  //if not using right sensor, comment out entire if statement
-
-
-  if (pingRight.pingComplete()) {
-    Serial.print(pingRight.centimeters);
-    Serial.print(" cm Right ||  ");
-    Serial.println(" ");
-    Serial.println(" ");
-    sensorSelect = 0;    //
-  }
 
 
 

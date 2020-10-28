@@ -49,7 +49,9 @@ class pingObject {
 
     // Constructor
 
-    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8, bool serialMonitor = true, uint32_t sensorSampleDelay = 100, bool autoTrigger = true, bool dataFilter = true, float filterBalance = 0.9):
+    pingObject(int16_t triggerOutputPin = 2, int16_t echoInputPin = 8,
+    bool serialMonitor = true, uint32_t sensorSampleDelay = 100,
+    bool autoTrigger = true, bool dataFilter = true, float filterBalance = 0.9):
       triggerPin(triggerOutputPin),
       echoPin(echoInputPin),
       printSerial(serialMonitor),
