@@ -53,12 +53,12 @@
 #include <autoDelay.h>
 
 
-#define NUM_SENSORS 2
+//#define NUM_SENSORS 2
 
 #define SENSOR_LEFT 0
 #define SENSOR_RIGHT 1
 
-#define EXTRA_MONITOR_OUTPUT true
+#define EXTRA_MONITOR_OUTPUT false
 
 
 
@@ -87,11 +87,23 @@ class pingNavigation {
     }
 
 
-    void navSetup(uint32_t baudRate = 152000);
+    void navSetup(uint32_t baudRate = 115200);
 
-    void pingNavLoop();
+    void masterLoop();
 
-    uint8_t distanceStateCalculator(uint32_t distance_cm);   // input distance in cm, output distanceState.
+    void pingNavLoop();                 // "mirror" of pingLoop from pingObject, but splits up loop time between SENSOR_LEFT, & SENSOR_RIGHT
+
+    void autoTriggerPing();
+
+    void manualTriggerPing(uint8_t selectSensor = SENSOR_LEFT);
+
+    void completePings();
+
+    uint8_t distanceStateCalculator(uint32_t distance_cm);        // input distance in cm, output distanceState.
+
+    void timeoutSensor();
+
+    uint16_t pingsRxed = 0;   // variable to count number of pings rxed for debugging
 
     uint16_t distanceLeft_cm;
     uint16_t distanceRight_cm;
@@ -114,9 +126,40 @@ class pingNavigation {
 
     autoDelay pingTimer;
 
+    char naText[14]          = {"N/A          "};
+    char tooCloseText[14]    = {"Too Close    "};
+    char dangerCloseText[14] = {"Danger Close "};
+    char veryCloseText[14]   = {"Very Close   "};
+    char closeText[14]       = {"Close        "};
+    char midCloseText[14]    = {"Medium Close "};
+    char midText[14]         = {"Medium       "};
+    char midFarText[14]      = {"Medium Far   "};
+    char farText[14]         = {"Far          "};
+    char blankText[14]       = {"             "};
 
+
+
+
+    char *distanceStateText[11] = {naText, tooCloseText, dangerCloseText, veryCloseText, closeText, midCloseText, midText, midFarText, farText, blankText};
+
+    char distanceStatePrintout[16];   // this is the string that gets printed
+
+#define FAR_LIMIT 300
+#define MIDFAR_LIMIT 200
+#define MID_LIMIT 100
+#define MIDCLOSE_LIMIT 60
+#define CLOSE_LIMIT 40
+#define VERYCLOSE_LIMIT 30
+#define DANGERCLOSE_LIMIT 11
+#define TOOCLOSE_LIMIT 10
+
+    uint32_t timeoutTime = 2000;   // Times out and switches sensors after 2 seconds without a reply
+
+    uint32_t lastPing;
 
   private:
+
+    bool sensorArmed = true;   // bool to lock out retriggers of sensor if waiting for a pulse
 
     bool serialMonitor;   //
 

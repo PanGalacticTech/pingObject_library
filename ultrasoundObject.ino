@@ -21,15 +21,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
 // All dataObject stuff handled in pingObject.h
 //#include "dataObject.h"
 
@@ -60,16 +51,26 @@
 
 //pingObject pingRight(TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R , PING_SERIAL_OUTPUT, SENSOR_SAMPLE_DELAY_MS, AUTO_PING, DATA_FILTERING, FILTER_BIAS);
 
-#define MONITOR_OUTPUT true
+#define MONITOR_OUTPUT false
 #define PING_TIMER_MS 1000                    // Controls delay between sensorPings
 
-pingNavigation robotNav(TRIGGER_OUTPUT_PIN_L, ECHO_REVEIVE_PIN_L, TRIGGER_OUTPUT_PING_R, PING_TIMER_MS, ECHO_RECEIVE_PIN_R, DATA_FILTERING, FILTER_BIAS, MONITOR_OUTPUT);
+pingNavigation robotNav(TRIGGER_OUTPUT_PIN_L, ECHO_RECEIVE_PIN_L, TRIGGER_OUTPUT_PIN_R, ECHO_RECEIVE_PIN_R, PING_TIMER_MS, DATA_FILTERING, FILTER_BIAS, MONITOR_OUTPUT);
+
+
+#include<autoDelay.h>
+
+autoDelay testDelay;
+
+uint32_t printDelay = 500;
+
+
+
 
 
 void setup() {
-//  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required
+  Serial.begin(115200); // if PING_SERIAL_OUTPUT is set true, Serial begin is handled by pingObject.begin(), else it must be called independently if Serial functions are required
 
-robotNav.navSetup();
+  robotNav.navSetup();
 
 }
 
@@ -77,61 +78,31 @@ robotNav.navSetup();
 
 
 
-// defensive variables not currently in use
-uint32_t defenseCount = 0;
-
-uint8_t previousMode;
 
 
-
+char printString[42];
 
 
 void loop() {
 
 
-robotNav.masterLoop()
+  robotNav.masterLoop();
 
 
+  // if MONITOR_OUTPUT is false then data can be accessed with the following API
+
+  if (testDelay.millisDelay(printDelay)) {
+    sprintf(printString, "%i cm ||%s Left", robotNav.distanceLeft_cm, robotNav.distanceStateText[robotNav.distanceState_LEFT]);
+    Serial.println(printString);
+
+    sprintf(printString, "%i cm ||%s Right", robotNav.distanceRight_cm, robotNav.distanceStateText[robotNav.distanceState_RIGHT]);
+    Serial.println(printString);
+
+
+  }
 
 
 
 }
 
 //# ~~ End of Main Loop ~~ #
-
-
-
-
-
-
-
-// Muted Defensive Code. Needs work
-
-
-//vvv ~~ None of this required at the moment ~~ vvv
-
-
-/*
-  if (previousMode == sensorSelect) {              // Start counting when previousMode is equal to the current mode
-    defenseCount++;
-  //  Serial.println(defenseCount);
-  } else {                                       // if they are different
-    previousMode = sensorSelect;                  // Save the current mode
-    defenseCount = 0;                             // Reset the count
-   // Serial.println(defenseCount);
-  }
-
-  /*
-  if (defenseCount >= 1000) {                  // If the count reaches 1000, assumed that loops has become stuck
-    Serial.println("defensive mode switch");
-    defenseCount = 0;                                // Reset the count
-    if (sensorSelect == 0) {                             // Change the mode which resets the pingSequencer << NO WAIT IT DOES NOT DOES IT?!?!?
-      sensorSelect = 1;
-    } else {
-      sensorSelect = 0;
-    }
-  }
-*/
-
-
-// NOTE: DO TOMORROW INSTEAD >>> IF THEY ARE EQUAL, START TIMER> IF TIMER UP CHANGE MODE> MUCH BETTER!!!?!?!

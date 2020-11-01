@@ -159,6 +159,7 @@ void pingObject::timeEcho() {
   if (loopEscape >= 2000) {                                     // Method for escaping a loop if the echo is missed
     loopEscape = 0;
     pingSequencer = 0;
+    Serial.println("loopEscape~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
   }
 }
 
