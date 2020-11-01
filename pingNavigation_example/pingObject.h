@@ -33,7 +33,7 @@
 #endif
 
 #include <autoDelay.h>  // Requires Autodelay instance to handle timing functions. Library can be found @: https://github.com/PanGalacticTech/autoDelay_Library
-#include "dataObject.h"   // Requires dataObject instance to handle filtering of sensor readings. Library can be found @ Locally, within this folder.
+#include <dataObject.h>   // Requires dataObject instance to handle filtering of sensor readings. Library can be found @ Locally, within this folder.
 
 
 
