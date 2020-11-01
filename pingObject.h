@@ -1,21 +1,22 @@
-/* ~~~~~~~ pingObject.h ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    UltraSonic Distance Sensor Object
-
-    Modification of the example program, this one removes all delay() functions.
-    Instead uses a state machine with a sequencer to control the timing
-    of input & output events.
-
-    This lets the sensor run around other, time critical software functions.
-
-
+/* ~~~~~~~~~~~||.. pingObject.h .. ||~~~~~~~~~~
+ * ~~~~~~ UltraSonic Distance Sensor Object ~~~~~~~
 
   Ping))) Sensor
 
-  This sketch reads a PING))) ultrasonic rangefinder and returns the distance
+  This library controls a PING))) ultrasonic rangefinder and returns the distance
   to the closest object in range. To do this, it sends a pulse to the sensor to
   initiate a reading, then listens for a pulse to return. The length of the
   returning pulse is proportional to the distance of the object from the sensor.
+
+
+   This library is a modification of the example program from the arduino IDE,
+   which removes any delay() functions, 
+   instead it uses a state machine with a sequencer to control the timing
+   of input & output events.
+
+   This lets the sensor run around other, time critical software functions.
+
+
 
 */
 

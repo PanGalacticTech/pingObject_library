@@ -1,19 +1,19 @@
-/* ~~~~~~~ UltraSonic Distance Sensor Object ~~~~~~~
+/* ~~~~~~~~~~~|| << pingNavigation - Example >> ||~~~~~~~~~~
 
-    Modification of the example program, this one removes any delay() functions
-    and instead uses a state machine with a sequencer to control the timing
-    of input & output events.
+   ~~~~~~Using ~ UltraSonic Distance Sensor Object ~~~~~~~
 
-    This lets the sensor run around other, time critical software functions.
+  This example sketch outlines the basic method for using the
 
+  pingNavigation.h
 
+  library.
 
-  Ping))) Sensor
+  Creating one instance of the pingNavigation library calls 2 pingObjects,
+  integrated into one sensor system, which returns distance to the target
+  from two different directions, and a quantized ranged output which can
+  be used to control state logic, simplifying higher level decisions made
+  by a navigating vehicle.
 
-  This sketch reads a PING))) ultrasonic rangefinder and returns the distance
-  to the closest object in range. To do this, it sends a pulse to the sensor to
-  initiate a reading, then listens for a pulse to return. The length of the
-  returning pulse is proportional to the distance of the object from the sensor.
 
 */
 

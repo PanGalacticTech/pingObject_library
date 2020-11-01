@@ -1,41 +1,22 @@
-/* || ::::::  pingNavigation.h :::::: ||
+/* || ::::::  pingNavigation.cpp :::::: ||
 
     Library to automate pairs of ultrasound sensors
     in an integrated navigation system.
 
-    Inputs:
 
-    Left Trigger Pin
-    Left Echo Pin
+  Creating one instance of the pingNavigation library calls 2 pingObjects,
+  integrated into one sensor system, which returns distance to the target
+  from two different directions, and a quantized ranged output which can
+  be used to control state logic, simplifying higher level decisions made
+  by a navigating vehicle.
 
-    Right Trigger pin
-    Right Echo Pin
+  Variables/Options modified from pingObject:
+  PING_SERIAL_OUTPUT disabled by default
+  AUTO_PING          disabled by default
+  SENSOR_SAMPLE_DELAY (default value 200 is passed as argument
+  but disabled. Instead this variable is used for the delay
+  controlling the pair of sensors)
 
-    Sample Delay
-
-   Data Filtering
-   Filtering Bias
-
-   monitorOutput
-
-   distanceBand (Close, mediumClose, medium, mediumFar, far)
-
-
-   Outputs:
-
-   distanceLeft
-   distanceRight
-
-   distanceBandLeft
-   distanceBandRight
-
-
-
-   PING_SERIAL_OUTPUT disabled by default
-   AUTO_PING          disabled by default
-   SENSOR_SAMPLE_DELAY (default value 200 is passed as argument
-   but disabled. Instead this variable is used for the delay
-   controlling the pair of sensors)
 */
 
 
