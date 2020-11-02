@@ -1,0 +1,32 @@
+pingObject		KEYWORD1
+
+begin			KEYWORD2
+pingLoop			KEYWORD2
+pingDistance		KEYWORD2
+timeTrigger		KEYWORD2
+triggerPing		KEYWORD2
+sendPing			KEYWORD2
+timeEcho			KEYWORD2
+pingCalc			KEYWORD2
+pingComplete		KEYWORD2
+microsecondsToCentimeters		KEYWORD2
+printDistance_cm		KEYWORD2
+printFiltered_data		KEYWORD2
+debugOutput  		KEYWORD2
+pulseMeasure		KEYWORD2
+outputPinControl		KEYWORD2
+
+
+pingNavigation		KEYWORD1
+
+
+navSetup			KEYWORD2
+masterLoop		KEYWORD2
+pingNavLoop		KEYWORD2
+
+autoTriggerPing		KEYWORD2
+manualTriggerPing		KEYWORD2
+completePings		KEYWORD2
+distanceStateCalculator	KEYWORD2
+timeoutSensor		KEYWORD2
+
